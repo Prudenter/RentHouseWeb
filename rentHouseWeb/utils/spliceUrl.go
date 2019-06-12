@@ -8,7 +8,7 @@ package utils
 	url请求拼接函数
 	将http://IP:PORT + url进行拼接
 */
-func spliceUrl(url string) (reqUrl string) {
+func SpliceUrl(url string) (reqUrl string) {
 	reqUrl = "http://" + G_fastdfs_addr + ":" + G_fastdfs_port + "/" + url
 	return
 }

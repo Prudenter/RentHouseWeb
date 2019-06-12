@@ -9,6 +9,7 @@ import (
 	客户端业务处理函数
 */
 
+//模板方法
 // 路由解析函数(返回到前端的响应,前端传入的请求,路由解析请求后的参数)
 func ExampleCall(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	/*// 定义接受前端发送过来的json数据的容器

@@ -5,6 +5,9 @@ import (
 	"github.com/micro/go-web"
 	"RentHouseWeb/rentHouseWeb/handler"
 	"github.com/julienschmidt/httprouter"
+	_ "RentHouseWeb/rentHouseWeb/models"
+	"RentHouseWeb/rentHouseWeb/utils"
+	"net/http"
 )
 
 /*
@@ -15,7 +18,7 @@ func main() {
 	service := web.NewService(
 		web.Name("go.micro.web.rentHouseWeb"),
 		web.Version("latest"),
-		web.Address("127.0.0.1:8888"),
+		web.Address(utils.G_server_addr+":"+utils.G_server_port),
 	)
 
 	// 服务初始化
@@ -26,7 +29,10 @@ func main() {
 	//创建路由
 	router := httprouter.New()
 
-	//注册路由解析函数
+	//文件服务器映射静态页面
+	router.NotFound = http.FileServer(http.Dir("html"))
+
+	//注册路由解析函数--模板调用
 	router.GET("/example/call", handler.ExampleCall)
 
 	//将router注册到服务
