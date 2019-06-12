@@ -1,33 +1,39 @@
 package main
 
 import (
-        "github.com/micro/go-log"
-	"net/http"
-
-        "github.com/micro/go-web"
-        "RentHouseWeb/rentHouseWeb/handler"
+	"github.com/micro/go-log"
+	"github.com/micro/go-web"
+	"RentHouseWeb/rentHouseWeb/handler"
+	"github.com/julienschmidt/httprouter"
 )
 
+/*
+	web服务主函数
+*/
 func main() {
-	// create new web service
-        service := web.NewService(
-                web.Name("go.micro.web.rentHouseWeb"),
-                web.Version("latest"),
-        )
+	// 创建web服务
+	service := web.NewService(
+		web.Name("go.micro.web.rentHouseWeb"),
+		web.Version("latest"),
+		web.Address("127.0.0.1:8888"),
+	)
 
-	// initialise service
-        if err := service.Init(); err != nil {
-                log.Fatal(err)
-        }
+	// 服务初始化
+	if err := service.Init(); err != nil {
+		log.Fatal(err)
+	}
 
-	// register html handler
-	service.Handle("/", http.FileServer(http.Dir("html")))
+	//创建路由
+	router := httprouter.New()
 
-	// register call handler
-	service.HandleFunc("/example/call", handler.ExampleCall)
+	//注册路由解析函数
+	router.GET("/example/call", handler.ExampleCall)
 
-	// run service
-        if err := service.Run(); err != nil {
-                log.Fatal(err)
-        }
+	//将router注册到服务
+	service.Handle("/", router)
+
+	// 服务运行
+	if err := service.Run(); err != nil {
+		log.Fatal(err)
+	}
 }
