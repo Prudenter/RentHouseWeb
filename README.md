@@ -1,0 +1,2 @@
+# RentHouseWeb
+RentHouseWeb是一个基于Golang语言，go-micro框架开发的微服务项目，是一个实现了RESTful架构风格的应用。
