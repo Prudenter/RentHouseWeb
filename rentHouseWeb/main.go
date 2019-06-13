@@ -32,8 +32,8 @@ func main() {
 	//文件服务器映射静态页面
 	router.NotFound = http.FileServer(http.Dir("html"))
 
-	//注册路由解析函数--模板调用
-	router.GET("/example/call", handler.ExampleCall)
+	//注册路由解析函数
+	router.GET("/api/v1.0/areas", handler.GetArea)
 
 	//将router注册到服务
 	service.Handle("/", router)

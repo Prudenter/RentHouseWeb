@@ -30,7 +30,7 @@ var (
 */
 func InitConfig() {
 	//从配置文件读取配置信息
-	appconf, err := config.NewConfig("ini", "./conf/app.conf")//此路径是针对于main函数来说的相对路径
+	appconf, err := config.NewConfig("ini", "/home/itcast/workspace/go/src/RentHouseWeb/rentHouseWeb/conf/app.conf") //此路径是针对于main函数来说的相对路径
 	if err != nil {
 		beego.Debug(err)
 		return
