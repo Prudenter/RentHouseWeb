@@ -12,7 +12,7 @@ import (
 )
 
 /*
-	客户端业务处理函数
+	区域服务web端业务处理函数
 */
 
 // 路由解析函数(返回到前端的响应,前端传入的请求,路由解析请求后的参数)
@@ -45,6 +45,40 @@ func GetArea(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 		"errno":  rsp.Errno,
 		"errmsg": rsp.Errmsg,
 		"data":   area_list,
+	}
+
+	//设置返回数据的格式
+	w.Header().Set("Content-Type","application/json")
+
+	// 将map集合转换为json数据,发送给前端
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+}
+
+func GetSession(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	// 准备返回给前端的map
+	response := map[string]interface{}{
+		"errno": "4101",
+		"errmsg": "用户未登录",
+	}
+
+	//设置返回数据的格式
+	w.Header().Set("Content-Type","application/json")
+
+	// 将map集合转换为json数据,发送给前端
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+}
+
+func GetIndex(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	// 准备返回给前端的map
+	response := map[string]interface{}{
+		"errno": "0",
+		"errmsg": "ok",
 	}
 
 	//设置返回数据的格式

@@ -35,6 +35,11 @@ func main() {
 	//注册路由解析函数
 	router.GET("/api/v1.0/areas", handler.GetArea)
 
+	//解决session报错问题
+	router.GET("/api/v1.0/session", handler.GetSession)
+	//解决index报错问题
+	router.GET("/api/v1.0/house/index", handler.GetIndex)
+
 	//将router注册到服务
 	service.Handle("/", router)
 
