@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package go.micro.srv.getImageCd;
+
+service Example {
+    rpc GetImageCd (Request) returns (Response) {
+    }
+}
+
+// web->srv
+message Request {
+    string uuid = 1;
+}
+
+// srv->web
+message Response {
+    // 错误码
+    string errno = 1;
+    // 错误信息
+    string errmsg = 2;
+    // pix,保管图像的像素色彩信息,顺序为R,G,B,A
+    repeated uint32 pix = 3;
+    // Stride,表示pix中每行像素占用的字节数
+    int64 stride = 4;
+    // point,表示图像的范围
+    message point {
+        int64 x = 1;
+        int64 y = 2;
+    }
+    point min = 5;
+    point max = 6;
+}
