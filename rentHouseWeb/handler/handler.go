@@ -8,11 +8,14 @@ import (
 	"context"
 	GETAREA "RentHouseWeb/getArea/proto/example"
 	GETIMAGECD "RentHouseWeb/getImageCd/proto/example"
+	GETSMSCD "RentHouseWeb/getSmscd/proto/example"
 	"encoding/json"
 	"RentHouseWeb/rentHouseWeb/models"
 	"image"
 	"github.com/afocus/captcha"
 	"image/png"
+	"regexp"
+	"RentHouseWeb/rentHouseWeb/utils"
 )
 
 /*
@@ -157,4 +160,68 @@ func GetImageCd(w http.ResponseWriter, r *http.Request, params httprouter.Params
 	//将图片发送给前端
 	png.Encode(w, image)
 
+}
+
+/*
+	短信验证码服务web端业务处理函数
+*/
+func GetSmscd(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	fmt.Println("获取短信验证码服务,GetSmscd..")
+
+	//获取手机号
+	mobile := params.ByName("mobile")
+	//验证手机号
+	reg := regexp.MustCompile(`0?(13|14|15|17|18|19)[0-9]{9}`)
+	bool := reg.MatchString(mobile)
+	if bool == false {
+		//准备返回给前端的map
+		response := map[string]interface{}{
+			"errno":  utils.RECODE_MOBILEERR,
+			"errmsg": utils.RecodeText(utils.RECODE_MOBILEERR),
+		}
+		//设置返回数据的格式
+		w.Header().Set("Content-Type", "application/json")
+		//将map转化为json 返回给前端
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+		return
+	}
+
+	//获取图片验证码和uuid
+	text := r.URL.Query()["text"][0]
+	uuid := r.URL.Query()["id"][0]
+
+	//创建grpc客户端
+	client := grpc.NewService()
+	//客户端初始化
+	client.Init()
+	// 通过protobuf生成文件调用创建客户端句柄的函数(服务名,客户端默认参数)
+	exampleClient := GETSMSCD.NewExampleService("go.micro.srv.getSmscd", client.Client())
+	// 通过句柄调用服务端的业务处理函数,获取响应数据
+	rsp, err := exampleClient.GetSmscd(context.TODO(), &GETSMSCD.Request{
+		Mobile: mobile,
+		Uuid:   uuid,
+		Text:   text,
+	})
+	// 判断是否成功
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	// 准备返回给前端的map
+	response := map[string]interface{}{
+		"errno":  rsp.Errno,
+		"errmsg": rsp.Errmsg,
+	}
+
+	//设置返回数据的格式
+	w.Header().Set("Content-Type", "application/json")
+
+	// 将map集合转换为json数据,发送给前端
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
 }

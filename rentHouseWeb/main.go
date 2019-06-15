@@ -43,6 +43,9 @@ func main() {
 	//注册图片验证码服务路由解析函数
 	router.GET("/api/v1.0/imagecode/:uuid", handler.GetImageCd)
 
+	//注册短信验证码服务路由解析函数
+	router.GET("/api/v1.0/smscode/:mobile", handler.GetSmscd)
+
 
 	//将router注册到服务
 	service.Handle("/", router)
