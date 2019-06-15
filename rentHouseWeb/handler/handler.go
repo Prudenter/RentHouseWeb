@@ -7,8 +7,12 @@ import (
 	"github.com/micro/go-grpc"
 	"context"
 	GETAREA "RentHouseWeb/getArea/proto/example"
+	GETIMAGECD "RentHouseWeb/getImageCd/proto/example"
 	"encoding/json"
 	"RentHouseWeb/rentHouseWeb/models"
+	"image"
+	"github.com/afocus/captcha"
+	"image/png"
 )
 
 /*
@@ -48,7 +52,7 @@ func GetArea(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	}
 
 	//设置返回数据的格式
-	w.Header().Set("Content-Type","application/json")
+	w.Header().Set("Content-Type", "application/json")
 
 	// 将map集合转换为json数据,发送给前端
 	if err := json.NewEncoder(w).Encode(response); err != nil {
@@ -60,12 +64,12 @@ func GetArea(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 func GetSession(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	// 准备返回给前端的map
 	response := map[string]interface{}{
-		"errno": "4101",
+		"errno":  "4101",
 		"errmsg": "用户未登录",
 	}
 
 	//设置返回数据的格式
-	w.Header().Set("Content-Type","application/json")
+	w.Header().Set("Content-Type", "application/json")
 
 	// 将map集合转换为json数据,发送给前端
 	if err := json.NewEncoder(w).Encode(response); err != nil {
@@ -77,16 +81,80 @@ func GetSession(w http.ResponseWriter, r *http.Request, params httprouter.Params
 func GetIndex(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	// 准备返回给前端的map
 	response := map[string]interface{}{
-		"errno": "0",
+		"errno":  "0",
 		"errmsg": "ok",
 	}
 
 	//设置返回数据的格式
-	w.Header().Set("Content-Type","application/json")
+	w.Header().Set("Content-Type", "application/json")
 
 	// 将map集合转换为json数据,发送给前端
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}
+}
+
+/*
+	图片验证码服务web端业务处理函数
+*/
+func GetImageCd(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	fmt.Println("获取图片验证码服务,GetImageCd..")
+
+	//获取url中所带的参数,uuid
+	uuid := params.ByName("uuid")
+	// 创建grpc客户端
+	client := grpc.NewService()
+	// 初始化客户端
+	client.Init()
+	// 通过protobuf生成文件调用创建客户端句柄的函数(服务名,客户端默认参数)
+	exampleClient := GETIMAGECD.NewExampleService("go.micro.srv.getImageCd", client.Client())
+	// 通过句柄调用服务端的业务处理函数,获取响应数据
+	rsp, err := exampleClient.GetImageCd(context.TODO(), &GETIMAGECD.Request{
+		Uuid: uuid,
+	})
+	// 判断是否成功
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	//判断返回值,如果不等于0,直接返回错误
+	if rsp.Errno != "0" {
+		// 准备返回给前端的map
+		response := map[string]interface{}{
+			"errno":  rsp.Errno,
+			"errmsg": rsp.Errmsg,
+		}
+
+		//设置返回数据的格式
+		w.Header().Set("Content-Type", "application/json")
+
+		// 将map集合转换为json数据,发送给前端
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+		return
+	}
+
+	//接受图片数据,拼接图片结构体,并将图片发送给前端
+	//定义接受图片数据的变量
+	var rgba image.RGBA
+	for _, value := range rsp.Pix {
+		//循环接收Pix
+		rgba.Pix = append(rgba.Pix, uint8(value))
+	}
+	//接收Stride
+	rgba.Stride = int(rsp.Stride)
+	//接收point
+	rgba.Rect.Min.X = int(rsp.Min.X)
+	rgba.Rect.Min.Y = int(rsp.Min.Y)
+	rgba.Rect.Max.X = int(rsp.Max.X)
+	rgba.Rect.Max.Y = int(rsp.Max.Y)
+	var image captcha.Image
+	image.RGBA = &rgba
+	//将图片发送给前端
+	png.Encode(w, image)
+
 }
