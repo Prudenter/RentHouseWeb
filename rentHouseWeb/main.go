@@ -46,6 +46,9 @@ func main() {
 	//注册短信验证码服务路由解析函数
 	router.GET("/api/v1.0/smscode/:mobile", handler.GetSmscd)
 
+	//注册用户注册服务路由解析函数
+	router.POST("/api/v1.0/users", handler.PostRet)
+
 
 	//将router注册到服务
 	service.Handle("/", router)
