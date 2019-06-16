@@ -10,6 +10,7 @@ import (
 	GETIMAGECD "RentHouseWeb/getImageCd/proto/example"
 	GETSMSCD "RentHouseWeb/getSmscd/proto/example"
 	POSTRET "RentHouseWeb/postRet/proto/example"
+	GETSESSION "RentHouseWeb/getSession/proto/example"
 	"encoding/json"
 	"RentHouseWeb/rentHouseWeb/models"
 	"image"
@@ -21,9 +22,8 @@ import (
 
 /*
 	区域服务web端业务处理函数
+	路由解析函数(返回到前端的响应,前端传入的请求,路由解析请求后的参数)
 */
-
-// 路由解析函数(返回到前端的响应,前端传入的请求,路由解析请求后的参数)
 func GetArea(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	fmt.Println("获取区域信息服务,GetArea...")
 	// 创建grpc客户端
@@ -65,17 +65,63 @@ func GetArea(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	}
 }
 
+/*
+	登录检查服务业务处理函数
+*/
 func GetSession(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-	// 准备返回给前端的map
+	fmt.Println("登录检查服务,GetSession...")
+
+	//获取sessionId
+	cookie, err := r.Cookie("userLogin")
+	if err != nil {
+		// 准备返回给前端的map
+		response := map[string]interface{}{
+			"errno":  "4101",
+			"errmsg": "用户未登录",
+		}
+
+		//设置返回数据的格式
+		w.Header().Set("Content-Type", "application/json")
+
+		// 将map集合转换为json数据,发送给前端
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+	}
+
+	//创建 grpc 客户端
+	cli := grpc.NewService()
+	//客户端初始化
+	cli.Init()
+
+	// call the backend service
+	//通过protobuf 生成文件 创建 连接服务端 的客户端句柄
+	exampleClient := GETSESSION.NewExampleService("go.micro.srv.getSession", cli.Client())
+	//通过句柄调用服务端函数
+	rsp, err := exampleClient.GetSession(context.TODO(), &GETSESSION.Request{
+		SessionId: cookie.Value,
+	})
+	//判断是否成功
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	//将名字接收到
+	data := make(map[string]string)
+	data["name"] = rsp.Name
+
+	//准备返回给前端的map
 	response := map[string]interface{}{
-		"errno":  "4101",
-		"errmsg": "用户未登录",
+		"errno":  rsp.Errno,
+		"errmsg": rsp.Errmsg,
+		"data":   data,
 	}
 
 	//设置返回数据的格式
 	w.Header().Set("Content-Type", "application/json")
-
-	// 将map集合转换为json数据,发送给前端
+	//将map转化为json 返回给前端
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		http.Error(w, err.Error(), 500)
 		return
