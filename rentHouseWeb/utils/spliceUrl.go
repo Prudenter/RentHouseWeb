@@ -12,6 +12,8 @@ import (
 	_ "github.com/gomodule/redigo/redis"
 	_ "github.com/garyburd/redigo/redis"
 	_ "github.com/astaxie/beego/cache/redis"
+	"crypto/md5"
+	"encoding/hex"
 )
 
 /*
@@ -41,4 +43,12 @@ func RedisOpen(server_name, redis_addr, redis_port, redis_dbnum string) (bm cach
 		return nil, err
 	}
 	return bm, nil
+}
+
+/*
+	md5加密函数
+*/
+func Getmd5String(s string) string {
+	m := md5.New()
+	return hex.EncodeToString(m.Sum([]byte(s)))
 }

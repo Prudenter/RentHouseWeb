@@ -228,10 +228,10 @@ func GetSmscd(w http.ResponseWriter, r *http.Request, params httprouter.Params) 
 }
 
 /*
-	注册服务web端业务处理函数
+	用户注册服务web端业务处理函数
 */
 func PostRet(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-	fmt.Println("注册用户服务,PostRet..")
+	fmt.Println("用户注册服务,PostRet..")
 
 	// 接收前端发送过来的数据
 	var request map[string]interface{}
@@ -263,7 +263,7 @@ func PostRet(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	//客户端初始化
 	client.Init()
 	// 通过protobuf生成文件调用创建客户端句柄的函数(服务名,客户端默认参数)
-	exampleClient := POSTRET.NewExampleService("go.micro.srv.getSmscd", client.Client())
+	exampleClient := POSTRET.NewExampleService("go.micro.srv.postRet", client.Client())
 	// 通过句柄调用服务端的业务处理函数,获取响应数据
 	rsp, err := exampleClient.PostRet(context.TODO(), &POSTRET.Request{
 		Mobile:   request["mobile"].(string),
@@ -281,7 +281,7 @@ func PostRet(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 		"errmsg": rsp.Errmsg,
 	}
 
-	//读取存储用户登录信息的cookie
+	//读取存储sessionId的cookie
 	cookie, err := r.Cookie("userLogin")
 	// 如果读取失败或者cookie的value为空则创建cookie
 	if err != nil || cookie.Value == "" {
