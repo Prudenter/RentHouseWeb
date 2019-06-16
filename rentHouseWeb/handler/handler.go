@@ -88,13 +88,13 @@ func GetSession(w http.ResponseWriter, r *http.Request, params httprouter.Params
 			http.Error(w, err.Error(), 500)
 			return
 		}
+		return
 	}
 
 	//创建 grpc 客户端
 	cli := grpc.NewService()
 	//客户端初始化
 	cli.Init()
-
 	// call the backend service
 	//通过protobuf 生成文件 创建 连接服务端 的客户端句柄
 	exampleClient := GETSESSION.NewExampleService("go.micro.srv.getSession", cli.Client())
