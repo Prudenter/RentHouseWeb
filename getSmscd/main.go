@@ -5,11 +5,12 @@ import (
 	"github.com/micro/go-micro"
 	"RentHouseWeb/getSmscd/handler"
 	example "RentHouseWeb/getSmscd/proto/example"
+	"github.com/micro/go-grpc"
 )
 
 func main() {
 	// New Service
-	service := micro.NewService(
+	service := grpc.NewService(
 		micro.Name("go.micro.srv.getSmscd"),
 		micro.Version("latest"),
 	)
