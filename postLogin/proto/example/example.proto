@@ -17,7 +17,7 @@ message Request {
 // srv -> web
 message Response {
     // 错误码
-    string msg = 1;
+    string errno = 1;
     // 错误信息
     string errmsg = 2;
     // sessionId
