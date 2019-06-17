@@ -4,14 +4,13 @@ import (
 	"github.com/micro/go-log"
 	"github.com/micro/go-micro"
 	"RentHouseWeb/postLogin/handler"
-	"RentHouseWeb/postLogin/subscriber"
-
 	example "RentHouseWeb/postLogin/proto/example"
+	"github.com/micro/go-grpc"
 )
 
 func main() {
 	// New Service
-	service := micro.NewService(
+	service := grpc.NewService(
 		micro.Name("go.micro.srv.postLogin"),
 		micro.Version("latest"),
 	)
@@ -21,12 +20,6 @@ func main() {
 
 	// Register Handler
 	example.RegisterExampleHandler(service.Server(), new(handler.Example))
-
-	// Register Struct as Subscriber
-	micro.RegisterSubscriber("go.micro.srv.postLogin", service.Server(), new(subscriber.Example))
-
-	// Register Function as Subscriber
-	micro.RegisterSubscriber("go.micro.srv.postLogin", service.Server(), subscriber.Handler)
 
 	// Run service
 	if err := service.Run(); err != nil {
