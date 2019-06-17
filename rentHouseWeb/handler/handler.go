@@ -11,6 +11,7 @@ import (
 	GETSMSCD "RentHouseWeb/getSmscd/proto/example"
 	POSTRET "RentHouseWeb/postRet/proto/example"
 	GETSESSION "RentHouseWeb/getSession/proto/example"
+	POSTLOGIN "RentHouseWeb/postLogin/proto/example"
 	"encoding/json"
 	"RentHouseWeb/rentHouseWeb/models"
 	"image"
@@ -315,6 +316,77 @@ func PostRet(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 		Mobile:   request["mobile"].(string),
 		Password: request["password"].(string),
 		SmsCode:  request["sms_code"].(string),
+	})
+	// 判断是否成功
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	// 准备返回给前端的map
+	response := map[string]interface{}{
+		"errno":  rsp.Errno,
+		"errmsg": rsp.Errmsg,
+	}
+
+	//读取存储sessionId的cookie
+	cookie, err := r.Cookie("userLogin")
+	// 如果读取失败或者cookie的value为空则创建cookie
+	if err != nil || cookie.Value == "" {
+		cookie := http.Cookie{Name: "userLogin", Value: rsp.SessionId, MaxAge: 600, Path: "/"}
+		http.SetCookie(w, &cookie)
+	}
+
+	//设置返回数据的格式
+	w.Header().Set("Content-Type", "application/json")
+
+	// 将map集合转换为json数据,发送给前端
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+}
+
+/*
+	用户登录服务web端业务处理函数
+*/
+func PostLogin(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	fmt.Println("用户登录服务,PostLogin..")
+
+	// 接收前端发送过来的数据
+	var request map[string]interface{}
+	// 将前端json数据解析到map中
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	//校验数据
+	if request["mobile"].(string) == "" || request["password"].(string) == ""{
+		//准备返回给前端的map
+		response := map[string]interface{}{
+			"errno":  utils.RECODE_DATAERR,
+			"errmsg": utils.RecodeText(utils.RECODE_DATAERR),
+		}
+		//设置返回数据的格式
+		w.Header().Set("Content-Type", "application/json")
+		//将map转化为json 返回给前端
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+		return
+	}
+
+	//创建grpc客户端
+	client := grpc.NewService()
+	//客户端初始化
+	client.Init()
+	// 通过protobuf生成文件调用创建客户端句柄的函数(服务名,客户端默认参数)
+	exampleClient := POSTLOGIN.NewExampleService("go.micro.srv.postLogin", client.Client())
+	// 通过句柄调用服务端的业务处理函数,获取响应数据
+	rsp, err := exampleClient.PostLogin(context.TODO(), &POSTLOGIN.Request{
+		Mobile:   request["mobile"].(string),
+		Password: request["password"].(string),
 	})
 	// 判断是否成功
 	if err != nil {

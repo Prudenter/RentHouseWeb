@@ -50,6 +50,8 @@ func main() {
 	//注册用户注册服务路由解析函数
 	router.POST("/api/v1.0/users", handler.PostRet)
 
+	// 注册用户登录服务
+	router.POST("/api/v1.0/sessions", handler.PostLogin)
 
 	//将router注册到服务
 	service.Handle("/", router)
