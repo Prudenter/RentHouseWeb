@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package go.micro.srv.deleteSession;
+
+service Example {
+    rpc DeleteSession (Request) returns (Response) {
+    }
+}
+
+// web->srv
+message Request {
+    //sessionId
+    string sessionId = 1;
+}
+
+// srv->web
+message Response {
+    //错误码
+    string errno = 1;
+    //错误信息
+    string errmsg = 2;
+}
