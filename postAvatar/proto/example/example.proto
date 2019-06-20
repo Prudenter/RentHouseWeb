@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package go.micro.srv.postAvatar;
+
+service Example {
+    rpc Call (Request) returns (Response) {
+    }
+}
+
+// web->srv
+message Request {
+    // sessionId
+    string sessionId = 1;
+    // 文件大小
+    int64 fileSize = 2;
+    // 文件名
+    string fileName = 3;
+    // 二进制图片
+    bytes buffer = 4;
+}
+
+// srv->web
+message Response {
+    // 错误码
+    string errno = 1;
+    // 错误信息
+    string errmsg = 2;
+    // fileId
+    string fileId = 3;
+}
