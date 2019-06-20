@@ -2,47 +2,36 @@ package handler
 
 import (
 	"context"
-
-	"github.com/micro/go-log"
-
 	example "RentHouseWeb/deleteSession/proto/example"
+	"fmt"
+	"RentHouseWeb/rentHouseWeb/utils"
 )
 
 type Example struct{}
 
 // Call is a single request handler called via client.Call or the generated client code
-func (e *Example) Call(ctx context.Context, req *example.Request, rsp *example.Response) error {
-	log.Log("Received Example.Call request")
-	rsp.Msg = "Hello " + req.Name
-	return nil
-}
+func (e *Example) DeleteSession(ctx context.Context, req *example.Request, rsp *example.Response) error {
+	fmt.Println("退出登录服务,DeleteSession..")
+	// 1.初始化返回值
+	rsp.Errno = utils.RECODE_OK
+	rsp.Errmsg = utils.RecodeText(rsp.Errno)
 
-// Stream is a server side stream handler called via client.Stream or the generated client code
-func (e *Example) Stream(ctx context.Context, req *example.StreamingRequest, stream example.Example_StreamStream) error {
-	log.Logf("Received Example.Stream request with count: %d", req.Count)
+	// 2.连接redis
+	bm, err := utils.RedisOpen(utils.G_server_name, utils.G_redis_addr, utils.G_redis_port, utils.G_redis_dbnum)
+	if err != nil {
 
-	for i := 0; i < int(req.Count); i++ {
-		log.Logf("Responding: %d", i)
-		if err := stream.Send(&example.StreamingResponse{
-			Count: int64(i),
-		}); err != nil {
-			return err
-		}
+		fmt.Println("redis连接失败", err)
+		rsp.Errno = utils.RECODE_DBERR
+		rsp.Errmsg = utils.RecodeText(rsp.Errno)
+
+		return nil
 	}
 
-	return nil
-}
+	// 3.拼接key,删除session登录信息
+	sessionId := req.SessionId
+	bm.Delete(sessionId + "user_id")
+	bm.Delete(sessionId + "user_mobile")
+	bm.Delete(sessionId + "user_name")
 
-// PingPong is a bidirectional stream handler called via client.Stream or the generated client code
-func (e *Example) PingPong(ctx context.Context, stream example.Example_PingPongStream) error {
-	for {
-		req, err := stream.Recv()
-		if err != nil {
-			return err
-		}
-		log.Logf("Got ping %v", req.Stroke)
-		if err := stream.Send(&example.Pong{Stroke: req.Stroke}); err != nil {
-			return err
-		}
-	}
+	return nil
 }
