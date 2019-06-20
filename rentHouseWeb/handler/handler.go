@@ -13,6 +13,7 @@ import (
 	GETSESSION "RentHouseWeb/getSession/proto/example"
 	POSTLOGIN "RentHouseWeb/postLogin/proto/example"
 	GETUSERINFO "RentHouseWeb/getUserInfo/proto/example"
+	DELETESESSION "RentHouseWeb/deleteSession/proto/example"
 	"encoding/json"
 	"RentHouseWeb/rentHouseWeb/models"
 	"image"
@@ -471,6 +472,71 @@ func GetUserInfo(w http.ResponseWriter, r *http.Request, params httprouter.Param
 		"errno":rsp.Errno,
 		"errmsg":rsp.Errmsg,
 		"data":data,
+	}
+
+	//设置返回数据的格式
+	w.Header().Set("Content-Type","application/json")
+	//将map转化为json 返回给前端
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+}
+
+/*
+	退出登录服务web端业务处理函数
+*/
+func DeleteSession(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	fmt.Println("退出登录服务,DeleteSession..")
+
+	//获取cookie当中的sessionId
+	cookie, err := r.Cookie("userLogin")
+	if err != nil || cookie.Value == "" {
+		response := map[string]interface{}{
+			"errno":  utils.RECODE_SESSIONERR,
+			"errmsg": utils.RecodeText(utils.RECODE_SESSIONERR),
+		}
+		//设置返回数据的格式
+		w.Header().Set("Content-Type", "application/json")
+		//将map转化为json 返回给前端
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+		return
+	}
+
+	// 创建grpc客户端
+	client := grpc.NewService()
+	// 初始化客户端
+	client.Init()
+	// 通过protobuf生成文件调用创建客户端句柄的函数(服务名,客户端默认参数)
+	exampleClient := DELETESESSION.NewExampleService("go.micro.srv.deleteSession", client.Client())
+	// 通过句柄调用服务端的业务处理函数,获取响应数据
+	rsp, err := exampleClient.DeleteSession(context.TODO(), &DELETESESSION.Request{
+		SessionId: cookie.Value,
+	})
+	// 判断是否成功
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	// 删除cookie当中的sessionId
+	if rsp.Errno == "0" {
+		cookie,err := r.Cookie("userLogin")
+		if err!=nil ||  cookie.Value==""{
+			return
+		}else {
+			cookie := http.Cookie{Name:"userLogin",Value:"",Path:"/",MaxAge:-1}
+			http.SetCookie(w,&cookie)
+		}
+	}
+
+	//准备返回给前端的map
+	response := map[string]interface{}{
+		"errno":rsp.Errno,
+		"errmsg":rsp.Errmsg,
 	}
 
 	//设置返回数据的格式
