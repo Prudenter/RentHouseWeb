@@ -14,6 +14,7 @@ import (
 	POSTLOGIN "RentHouseWeb/postLogin/proto/example"
 	GETUSERINFO "RentHouseWeb/getUserInfo/proto/example"
 	DELETESESSION "RentHouseWeb/deleteSession/proto/example"
+	POSTAVATAR "RentHouseWeb/postAvatar/proto/example"
 	"encoding/json"
 	"RentHouseWeb/rentHouseWeb/models"
 	"image"
@@ -542,6 +543,108 @@ func DeleteSession(w http.ResponseWriter, r *http.Request, params httprouter.Par
 	//设置返回数据的格式
 	w.Header().Set("Content-Type","application/json")
 	//将map转化为json 返回给前端
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+}
+
+
+/*
+	上传头像服务web端业务处理函数
+*/
+func PostAvatar(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	fmt.Println("上传头像服务,PostAvatar..")
+
+	// 接收前端发送过来的二进制图片数据
+	file,fileHeader,err := r.FormFile("avatar")
+	if err != nil {
+		response := map[string]interface{}{
+			"errno":  utils.RECODE_IOERR,
+			"errmsg": utils.RecodeText(utils.RECODE_IOERR),
+		}
+		//设置返回数据的格式
+		w.Header().Set("Content-Type", "application/json")
+		//将map转化为json 返回给前端
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+		return
+	}
+
+	// TODO 可以进行文件类型判断
+
+	//创建一个二进制的空间
+	fileBuffer := make([]byte,fileHeader.Size)
+	//把接收到的文件读入二进制空间
+	_,err = file.Read(fileBuffer)
+	if err!=nil{
+		response := map[string]interface{}{
+			"errno": utils.RECODE_IOERR,
+			"errmsg": utils.RecodeText(utils.RECODE_IOERR),
+		}
+		//设置返回数据的格式
+		w.Header().Set("Content-Type","application/json")
+		//将map转化为json 返回给前端
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+		return
+	}
+
+	//获取sessionId
+	cookie,err := r.Cookie("userLogin")
+	if err!=nil ||cookie.Value ==""{
+		response := map[string]interface{}{
+			"errno": utils.RECODE_SESSIONERR,
+			"errmsg": utils.RecodeText(utils.RECODE_SESSIONERR),
+		}
+		//设置返回数据的格式
+		w.Header().Set("Content-Type","application/json")
+		//将map转化为json 返回给前端
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+		return
+	}
+
+
+	//创建grpc客户端
+	client := grpc.NewService()
+	//客户端初始化
+	client.Init()
+	// 通过protobuf生成文件调用创建客户端句柄的函数(服务名,客户端默认参数)
+	exampleClient := POSTAVATAR.NewExampleService("go.micro.srv.postAvatar", client.Client())
+	// 通过句柄调用服务端的业务处理函数,获取响应数据
+	rsp, err := exampleClient.PostAvatar(context.TODO(), &POSTAVATAR.Request{
+		SessionId:cookie.Value,
+		Buffer:fileBuffer,
+		FileName:fileHeader.Filename,
+		FileSize:fileHeader.Size,
+	})
+	// 判断是否成功
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	//接收返回数据,拼接url
+	data := make(map[string]string)
+	data["avatar_url"] = utils.SpliceUrl(rsp.FileId)
+
+	// 准备返回给前端的map
+	response := map[string]interface{}{
+		"errno":  rsp.Errno,
+		"errmsg": rsp.Errmsg,
+		"data":data,
+	}
+
+	//设置返回数据的格式
+	w.Header().Set("Content-Type", "application/json")
+	// 将map集合转换为json数据,发送给前端
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		http.Error(w, err.Error(), 500)
 		return

@@ -59,6 +59,8 @@ func main() {
 	// 注册退出登录服务路由解析函数
 	router.DELETE("/api/v1.0/session",handler.DeleteSession)
 
+	//注册上传头像服务路由解析函数
+	router.POST("/api/v1.0/user/avatar",handler.PostAvatar)
 
 	//将router注册到服务
 	service.Handle("/", router)
