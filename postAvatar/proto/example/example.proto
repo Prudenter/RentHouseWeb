@@ -3,7 +3,7 @@ syntax = "proto3";
 package go.micro.srv.postAvatar;
 
 service Example {
-    rpc Call (Request) returns (Response) {
+    rpc PostAvatar (Request) returns (Response) {
     }
 }
 

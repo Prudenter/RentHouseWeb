@@ -34,7 +34,7 @@ var _ server.Option
 // Client API for Example service
 
 type ExampleService interface {
-	Call(ctx context.Context, in *Request, opts ...client.CallOption) (*Response, error)
+	PostAvatar(ctx context.Context, in *Request, opts ...client.CallOption) (*Response, error)
 }
 
 type exampleService struct {
@@ -55,8 +55,8 @@ func NewExampleService(name string, c client.Client) ExampleService {
 	}
 }
 
-func (c *exampleService) Call(ctx context.Context, in *Request, opts ...client.CallOption) (*Response, error) {
-	req := c.c.NewRequest(c.name, "Example.Call", in)
+func (c *exampleService) PostAvatar(ctx context.Context, in *Request, opts ...client.CallOption) (*Response, error) {
+	req := c.c.NewRequest(c.name, "Example.PostAvatar", in)
 	out := new(Response)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -68,12 +68,12 @@ func (c *exampleService) Call(ctx context.Context, in *Request, opts ...client.C
 // Server API for Example service
 
 type ExampleHandler interface {
-	Call(context.Context, *Request, *Response) error
+	PostAvatar(context.Context, *Request, *Response) error
 }
 
 func RegisterExampleHandler(s server.Server, hdlr ExampleHandler, opts ...server.HandlerOption) error {
 	type example interface {
-		Call(ctx context.Context, in *Request, out *Response) error
+		PostAvatar(ctx context.Context, in *Request, out *Response) error
 	}
 	type Example struct {
 		example
@@ -86,6 +86,6 @@ type exampleHandler struct {
 	ExampleHandler
 }
 
-func (h *exampleHandler) Call(ctx context.Context, in *Request, out *Response) error {
-	return h.ExampleHandler.Call(ctx, in, out)
+func (h *exampleHandler) PostAvatar(ctx context.Context, in *Request, out *Response) error {
+	return h.ExampleHandler.PostAvatar(ctx, in, out)
 }
